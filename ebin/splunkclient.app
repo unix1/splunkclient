@@ -1,0 +1,10 @@
+{application,splunkclient,
+             [{description,[]},
+              {vsn,"1.0.0"},
+              {registered,[]},
+              {applications,[kernel,stdlib,crypto,asn1,public_key,ssl]},
+              {mod,{splunkclient,[]}},
+              {env,[]},
+              {modules,[splunkclient,splunkclient_http,splunkclient_login,
+                        splunkclient_login_sup,splunkclient_service,
+                        splunkclient_service_sup,splunkclient_sup]}]}.
