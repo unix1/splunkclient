@@ -6,7 +6,7 @@
 -export([start/2, stop/1]).
 
 %% User functions
--export([login/0, oneshot_search/1, oneshot_search/2]).
+-export([start/0, login/0, login/1, oneshot_search/1, oneshot_search/2]).
 
 %% ============================================================================
 %% Application callbacks
@@ -24,8 +24,12 @@ stop(_State) ->
     ok.
 
 %% ============================================================================
-%% User functions
+%% API functions
 %% ============================================================================
+
+start() ->
+    start_dependencies(),
+    application:start(splunkclient).
 
 login() ->
     login(splunkclient_conn_default).
@@ -42,4 +46,15 @@ oneshot_search(Connection, Term) ->
     supervisor:terminate_child(splunkclient_service_sup, Pid),
     supervisor:delete_child(splunkclient_service_sup, Pid),
     Result.
+
+%% ============================================================================
+%% Internal functions
+%% ============================================================================
+
+start_dependencies() ->
+    application:start(crypto),
+    application:start(asn1),
+    application:start(public_key),
+    application:start(ssl),
+    application:start(inets).
 

@@ -26,19 +26,16 @@ Edit the included `splunkclient.config` file. You can:
 
 * note that when calling functions without specifying a connection name, the `splunkclient_conn_default` will be used, so please don't change the name of this default entry
 
-Usage (interactive)
--------------------
+Usage
+-----
 
 * start Erlang shell
 
       `erl -pa ebin/ -config splunkclient.config`
 
-Usage (general)
----------------
+* start splunkclient
 
-* start splunkclient and dependent applications
-
-      `application:start(crypto),application:start(asn1),application:start(public_key),application:start(ssl),application:start(inets),application:start(splunkclient).`
+      `splunkclient:start().`
 
 * log in to the default configuration host
 
