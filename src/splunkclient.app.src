@@ -1,6 +1,6 @@
 {application, splunkclient,
  [
-  {description, ""},
+  {description, "Unofficial Splunk SDK Client in Erlang/OTP"},
   {vsn, "1.0.0"},
   {registered, []},
   {applications, [
@@ -9,7 +9,8 @@
                   crypto,
                   asn1,
                   public_key,
-                  ssl
+                  ssl,
+                  inets
                  ]},
   {mod, { splunkclient, []}},
   {env, []}
