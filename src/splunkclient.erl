@@ -6,7 +6,8 @@
 -export([start/2, stop/1]).
 
 %% User functions
--export([start/0, login/0, login/1, oneshot_search/1, oneshot_search/2]).
+-export([start/0, login/0, login/1, get_jobs/0, get_jobs/1, oneshot_search/1,
+         oneshot_search/2]).
 
 %% ============================================================================
 %% Application callbacks
@@ -30,6 +31,16 @@ stop(_State) ->
 start() ->
     start_dependencies(),
     application:start(splunkclient).
+
+get_jobs() ->
+    get_jobs(splunkclient_conn_default).
+
+get_jobs(Connection) ->
+    {ok, Pid} = supervisor:start_child(splunkclient_service_sup, []),
+    Result = splunkclient_service:get_jobs(Pid, Connection),
+    supervisor:terminate_child(splunkclient_service_sup, Pid),
+    supervisor:delete_child(splunkclient_service_sup, Pid),
+    Result.
 
 login() ->
     login(splunkclient_conn_default).

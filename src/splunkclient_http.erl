@@ -16,12 +16,17 @@ get_base_uri(C) ->
 get(Uri) ->
     get(Uri, [], []).
 
-get(Uri, Params) ->
-    get(Uri, Params, []).
+get(BaseUri, Params) ->
+    get(BaseUri, Params, []).
 
-get(Uri, Params, Headers) ->
-    % TODO
-    {Uri, Params, Headers}.
+get(BaseUri, Params, Headers) ->
+    case Params of
+        [] ->
+            Uri = BaseUri;
+        _Else ->
+            Uri = build_query_string(Params, BaseUri ++ "?")
+    end,
+    send_request(get, Uri, "", Headers, "").
 
 post(Uri) ->
     post(Uri, [], []).
@@ -30,14 +35,13 @@ post(Uri, Params) ->
     post(Uri, Params, []).
 
 post(Uri, Params, Headers) ->
-    Method = post,
     Type = "application/x-www-form-urlencoded",
     Body = build_query_string(Params),
-    HTTPOptions = [{relaxed, true}],
-    Options = [],
-    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
-        httpc:request(Method, {Uri, Headers, Type, Body}, HTTPOptions, Options),
-    {ok, ResponseBody}.
+    send_request(post, Uri, Body, Headers, Type).
+
+%% ============================================================================
+%% Internal functions
+%% ============================================================================
 
 build_query_string(Params) ->
     build_query_string(Params, "").
@@ -49,3 +53,17 @@ build_query_string([{Name, Value}|Rest], Acc) ->
         Rest,
         Acc ++ "&" ++ http_uri:encode(Name) ++ "=" ++ http_uri:encode(Value)
     ).
+
+send_request(Method, Uri, "", Headers, "") ->
+    HTTPOptions = [{relaxed, true}],
+    Options = [],
+    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
+        httpc:request(Method, {Uri, Headers}, HTTPOptions, Options),
+    {ok, ResponseBody};
+send_request(Method, Uri, Body, Headers, Type) ->
+    HTTPOptions = [{relaxed, true}],
+    Options = [],
+    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
+        httpc:request(Method, {Uri, Headers, Type, Body}, HTTPOptions, Options),
+    {ok, ResponseBody}.
+
