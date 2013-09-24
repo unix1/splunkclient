@@ -40,16 +40,19 @@ Usage
 * log in to the default connection host, or a specified named connection
 
       `splunkclient:login().`
+
       `splunkclient:login(splunkclient_conn_another).`
 
 
 * run a simple "oneshot" search against the default or a specified named connection
 
       `splunkclient:oneshot_search("index=main helloworld").`
+
       `splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").`
 
 * other useful functions
 
       `splunkclient:get_indexes().`
+
       `splunkclient:get_saved_searches().`
 
