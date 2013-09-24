@@ -37,20 +37,18 @@ Usage
 
       `splunkclient:start().`
 
-* log in to the default configuration host
+* log in to the default connection host, or a specified named connection
 
       `splunkclient:login().`
-
-* alternatively, log in to a named configuration host
-
       `splunkclient:login(splunkclient_conn_another).`
 
 
-* run a simple "oneshot" search against the default host
+* run a simple "oneshot" search against the default or a specified named connection
 
       `splunkclient:oneshot_search("index=main helloworld").`
-
-* alternatively, run a simple "oneshot" search against a named host
-
       `splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").`
+
+* other useful functions
+      `splunkclient:get_indexes().`
+      `splunkclient:get_saved_searches().`
 
