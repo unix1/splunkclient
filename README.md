@@ -49,6 +49,7 @@ Usage
       `splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").`
 
 * other useful functions
+
       `splunkclient:get_indexes().`
       `splunkclient:get_saved_searches().`
 
