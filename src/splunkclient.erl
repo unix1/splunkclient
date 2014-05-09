@@ -6,7 +6,7 @@
 -export([start/2, stop/1]).
 
 %% User functions
--export([start/0, login/0, login/1, get_indexes/0, get_indexes/1, get_jobs/0,
+-export([start/0, stop/0, login/0, login/1, get_indexes/0, get_indexes/1, get_jobs/0,
          get_jobs/1, get_saved_searches/0, get_saved_searches/1,
          oneshot_search/1, oneshot_search/2]).
 
@@ -30,38 +30,38 @@ stop(_State) ->
 %% ============================================================================
 
 start() ->
-    start_dependencies(),
+    application:start(crypto),
+    application:start(asn1),
+    application:start(public_key),
+    application:start(ssl),
+    application:start(inets),
     application:start(splunkclient).
+
+stop() ->
+    application:stop(splunkclient),
+    application:stop(inets),
+    application:stop(ssl),
+    application:stop(public_key),
+    application:stop(asn1),
+    application:stop(crypto).
 
 get_indexes() ->
     get_indexes(splunkclient_conn_default).
 
 get_indexes(Connection) ->
-    {ok, Pid} = supervisor:start_child(splunkclient_service_sup, []),
-    Result = splunkclient_service:get_indexes(Pid, Connection),
-    supervisor:terminate_child(splunkclient_service_sup, Pid),
-    supervisor:delete_child(splunkclient_service_sup, Pid),
-    Result.
+    splunkclient_service:get_indexes(Connection).
 
 get_jobs() ->
     get_jobs(splunkclient_conn_default).
 
 get_jobs(Connection) ->
-    {ok, Pid} = supervisor:start_child(splunkclient_service_sup, []),
-    Result = splunkclient_service:get_jobs(Pid, Connection),
-    supervisor:terminate_child(splunkclient_service_sup, Pid),
-    supervisor:delete_child(splunkclient_service_sup, Pid),
-    Result.
+    splunkclient_service:get_jobs(Connection).
 
 get_saved_searches() ->
     get_saved_searches(splunkclient_conn_default).
 
 get_saved_searches(Connection) ->
-    {ok, Pid} = supervisor:start_child(splunkclient_service_sup, []),
-    Result = splunkclient_service:get_saved_searches(Pid, Connection),
-    supervisor:terminate_child(splunkclient_service_sup, Pid),
-    supervisor:delete_child(splunkclient_service_sup, Pid),
-    Result.
+    splunkclient_service:get_saved_searches(Connection).
 
 login() ->
     login(splunkclient_conn_default).
@@ -73,20 +73,4 @@ oneshot_search(Term) ->
     oneshot_search(splunkclient_conn_default, Term).
 
 oneshot_search(Connection, Term) ->
-    {ok, Pid} = supervisor:start_child(splunkclient_service_sup, []),
-    Result = splunkclient_service:oneshot_search(Pid, Connection, Term),
-    supervisor:terminate_child(splunkclient_service_sup, Pid),
-    supervisor:delete_child(splunkclient_service_sup, Pid),
-    Result.
-
-%% ============================================================================
-%% Internal functions
-%% ============================================================================
-
-start_dependencies() ->
-    application:start(crypto),
-    application:start(asn1),
-    application:start(public_key),
-    application:start(ssl),
-    application:start(inets).
-
+    splunkclient_service:oneshot_search(Connection, Term).

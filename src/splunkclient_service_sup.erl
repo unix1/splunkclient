@@ -5,9 +5,6 @@
 %% Boilerplate
 -export([start_link/0, init/1]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(Id, Module, Args, Type), {Id, {Module, start_link, Args}, permanent, 5000, Type, [Module]}).
-
 %% ============================================================================
 %% API functions
 %% ============================================================================
@@ -20,8 +17,13 @@ start_link() ->
 %% ============================================================================
 
 init([]) ->
+    % supervisor auto-starts configured poolboy pools
+    {ok, Pools} = application:get_env(splunkclient, pools),
+    PoolSpecs = lists:map(fun({Name, SizeArgs, WorkerArgs}) ->
+        PoolArgs = [{name, {local, Name}},
+                    {worker_module, splunkclient_service}] ++ SizeArgs,
+        poolboy:child_spec(Name, PoolArgs, WorkerArgs)
+    end, Pools),
     MaxRestart = 1,
     MaxTime = 3600,
-    ChildSpec = ?CHILD(splunkclient_service, splunkclient_service, [], worker),
-    {ok, {{simple_one_for_one, MaxRestart, MaxTime}, [ChildSpec]}}.
-
+    {ok, {{one_for_one, MaxRestart, MaxTime}, PoolSpecs}}.

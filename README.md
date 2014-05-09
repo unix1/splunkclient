@@ -13,12 +13,12 @@ Installation
 
 * compile
 
-      `rebar compile`
+      `rebar get-deps && rebar compile`
 
 Configure
 ---------
 
-Edit the included `splunkclient.config` file. You can:
+Optionally edit the included `splunkclient.config` file. You can:
 
 * change default parameters such as host name, port, protocol, username, password
 
@@ -26,12 +26,14 @@ Edit the included `splunkclient.config` file. You can:
 
 * note that when calling functions without specifying a connection name, the `splunkclient_conn_default` will be used, so please don't change the name of this default entry
 
+* change default pool and worker configuration
+
 Usage
 -----
 
 * start Erlang shell
 
-      `erl -pa ebin/ -config splunkclient.config`
+      `erl -pa ebin/ -pa deps/poolboy/ebin/ -config splunkclient.config`
 
 * start splunkclient
 

@@ -1,6 +1,5 @@
 {application, splunkclient,
- [
-  {description, "Unofficial Splunk SDK Client in Erlang/OTP"},
+ [{description, "Unofficial Splunk SDK Client in Erlang/OTP"},
   {vsn, "1.0.0"},
   {registered, []},
   {applications, [
@@ -13,5 +12,14 @@
                   inets
                  ]},
   {mod, { splunkclient, []}},
-  {env, []}
+  {env, [
+    {pools, [
+        {splunkclient_pool_service,
+          [{size, 10}, % max pool size
+           {max_overflow, 5} % max # of workers created if pool is empty
+          ], % size args
+          [] % worker args
+        }
+    ]}
+  ]}
  ]}.

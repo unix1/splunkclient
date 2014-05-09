@@ -4,23 +4,19 @@
 -behaviour(gen_server).
 
 %% Boilerplate
--export([start_link/0, start_link/1, init/1, handle_call/3, handle_cast/2,
+-export([%start_link/0,
+         start_link/1, init/1, handle_call/3, handle_cast/2,
          handle_info/2, terminate/2, code_change/3]).
 
 %% API
--export([get_indexes/2, get_jobs/2, get_saved_searches/2, oneshot_search/3]).
+-export([get_indexes/1, get_jobs/1, get_saved_searches/1, oneshot_search/2]).
 
 %% ============================================================================
 %% Supervision functions
 %% ============================================================================
 %% start without name
-start_link() ->
+start_link([]) ->
     gen_server:start_link(?MODULE, [], []).
-
-%% start with module name
-%% not used yet
-start_link(Name) ->
-    gen_server:start_link({local, Name}, ?MODULE, [], []).
 
 %% init, set state
 init([]) ->
@@ -31,17 +27,29 @@ init([]) ->
 %% API functions
 %% ============================================================================
 
-get_indexes(Name, Connection) ->
-    gen_server:call(Name, {get_indexes, Connection}).
+get_indexes(Connection) ->
+    Worker = poolboy:checkout(splunkclient_pool_service),
+    Result = gen_server:call(Worker, {get_indexes, Connection}),
+    poolboy:checkin(splunkclient_pool_service, Worker),
+    Result.
 
-get_jobs(Name, Connection) ->
-    gen_server:call(Name, {get_jobs, Connection}).
+get_jobs(Connection) ->
+    Worker = poolboy:checkout(splunkclient_pool_service),
+    Result = gen_server:call(Worker, {get_jobs, Connection}),
+    poolboy:checkin(splunkclient_pool_service, Worker),
+    Result.
 
-get_saved_searches(Name, Connection) ->
-    gen_server:call(Name, {get_saved_searches, Connection}).
+get_saved_searches(Connection) ->
+    Worker = poolboy:checkout(splunkclient_pool_service),
+    Result = gen_server:call(Worker, {get_saved_searches, Connection}),
+    poolboy:checkin(splunkclient_pool_service, Worker),
+    Result.
 
-oneshot_search(Name, Connection, SearchTerm) ->
-    gen_server:call(Name, {oneshot_search, Connection, SearchTerm}).
+oneshot_search(Connection, SearchTerm) ->
+    Worker = poolboy:checkout(splunkclient_pool_service),
+    Result = gen_server:call(Worker, {oneshot_search, Connection, SearchTerm}),
+    poolboy:checkin(splunkclient_pool_service, Worker),
+    Result.
 
 %% ============================================================================
 %% Server functions
