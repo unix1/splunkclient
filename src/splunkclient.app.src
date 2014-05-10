@@ -12,14 +12,5 @@
                   inets
                  ]},
   {mod, { splunkclient, []}},
-  {env, [
-    {pools, [
-        {splunkclient_pool_service,
-          [{size, 10}, % max pool size
-           {max_overflow, 5} % max # of workers created if pool is empty
-          ], % size args
-          [] % worker args
-        }
-    ]}
-  ]}
+  {env, []}
  ]}.
