@@ -7,7 +7,7 @@
 -export([start_link/2, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% API
--export([login/1, get_token/1, get_connection/1]).
+-export([login/1, get_token/1, get_connection/1, get_pool/1]).
 
 %% ============================================================================
 %% Supervision functions
@@ -35,6 +35,12 @@ get_token(Name) ->
 get_connection(Name) ->
     gen_server:call(Name, {get_connection}).
 
+% get worker pool for this connection (without sending a message to server)
+get_pool(ConnectionName) ->
+    {ok, Connections} = application:get_env(splunkclient, connections),
+    Connection = proplists:get_value(ConnectionName, Connections),
+    proplists:get_value(pool, Connection).
+
 %% ============================================================================
 %% Server functions
 %% ============================================================================
@@ -42,6 +48,7 @@ get_connection(Name) ->
 handle_call({login}, _From, S) ->
     case liblogin(S) of
         {ok, Token} ->
+            gen_event:notify(splunkclient_service_eventman, {token, Token}),
             NewState = S#splunkclient_conn{token = Token},
             {reply, ok, NewState};
         {error, Reason} ->

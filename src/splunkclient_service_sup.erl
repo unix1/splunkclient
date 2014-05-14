@@ -17,8 +17,10 @@ start_link() ->
 %% ============================================================================
 
 init([]) ->
+    % start event manager
+    {ok, _Pid} = gen_event:start_link({local, splunkclient_service_eventman}),
     % supervisor auto-starts configured poolboy pools
-    {ok, Pools} = application:get_env(splunkclient, pools),
+    {ok, Pools} = application:get_env(splunkclient, service_pools),
     PoolSpecs = lists:map(fun({Name, SizeArgs, WorkerArgs}) ->
         PoolArgs = [{name, {local, Name}},
                     {worker_module, splunkclient_service}] ++ SizeArgs,
