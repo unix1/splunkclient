@@ -1,9 +1,41 @@
 -module(splunkclient_http).
 -include("splunkclient.hrl").
--export([get_base_uri/1, get/1, get/2, get/3, post/1, post/2, post/3]).
+-export([get/2, get/3, get/4, post/2, post/3, post/4]).
 
 %% ============================================================================
 %% API functions
+%% ============================================================================
+
+get(C, RelUri) ->
+    get(C, RelUri, [], []).
+
+get(C, RelUri, Params) ->
+    get(C, RelUri, Params, []).
+
+get(C, RelUri, Params, Headers) ->
+    BaseUri = get_base_uri(C) ++ RelUri,
+    Uri = case Params of
+        [] ->
+            BaseUri;
+        _Else ->
+            build_query_string(Params, BaseUri ++ "?")
+    end,
+    send_request(get, Uri, "", Headers, "").
+
+post(C, RelUri) ->
+    post(C, RelUri, [], []).
+
+post(C, RelUri, Params) ->
+    post(C, RelUri, Params, []).
+
+post(C, RelUri, Params, Headers) ->
+    Uri = get_base_uri(C) ++ RelUri,
+    Type = "application/x-www-form-urlencoded",
+    Body = build_query_string(Params),
+    send_request(post, Uri, Body, Headers, Type).
+
+%% ============================================================================
+%% Internal functions
 %% ============================================================================
 
 get_base_uri(C) ->
@@ -12,36 +44,6 @@ get_base_uri(C) ->
     Port = C#splunkclient_conn.port,
     Uri = Protocol ++ "://" ++ Host ++ ":" ++ Port,
     Uri.
-
-get(Uri) ->
-    get(Uri, [], []).
-
-get(BaseUri, Params) ->
-    get(BaseUri, Params, []).
-
-get(BaseUri, Params, Headers) ->
-    case Params of
-        [] ->
-            Uri = BaseUri;
-        _Else ->
-            Uri = build_query_string(Params, BaseUri ++ "?")
-    end,
-    send_request(get, Uri, "", Headers, "").
-
-post(Uri) ->
-    post(Uri, [], []).
-
-post(Uri, Params) ->
-    post(Uri, Params, []).
-
-post(Uri, Params, Headers) ->
-    Type = "application/x-www-form-urlencoded",
-    Body = build_query_string(Params),
-    send_request(post, Uri, Body, Headers, Type).
-
-%% ============================================================================
-%% Internal functions
-%% ============================================================================
 
 build_query_string(Params) ->
     build_query_string(Params, "").

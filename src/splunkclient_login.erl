@@ -73,12 +73,10 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 %% Internal functions
 %% ============================================================================
 
-liblogin(Connection) ->
-    Uri = splunkclient_http:get_base_uri(Connection) ++ "/services/auth/login",
-    Params = [
-        {"username", Connection#splunkclient_conn.user},
-        {"password", Connection#splunkclient_conn.pass}],
-    {ok, ResponseBody} = splunkclient_http:post(Uri, Params),
+liblogin(C) ->
+    Params = [{"username", C#splunkclient_conn.user},
+              {"password", C#splunkclient_conn.pass}],
+    {ok, ResponseBody} = splunkclient_http:post(C, "/services/auth/login", Params),
     {XML, _} = xmerl_scan:string(ResponseBody),
     [#xmlText{value = SessionKey}] = xmerl_xpath:string("/response/sessionKey/text()", XML),
     {ok, "Splunk " ++ SessionKey}.

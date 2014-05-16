@@ -143,38 +143,38 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 %% Internal functions
 %% ============================================================================
 
-libget_indexes(Connection) ->
-    Uri = splunkclient_http:get_base_uri(Connection) ++ "/services/data/indexes/",
+libget_indexes(C) ->
+    Uri = "/services/data/indexes/",
     Params = [],
-    Headers = [{"Authorization", Connection#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(Uri, Params, Headers),
+    Headers = [{"Authorization", C#splunkclient_conn.token}],
+    {ok, ResponseBody} = splunkclient_http:get(C, Uri, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
-libget_jobs(Connection) ->
-    Uri = splunkclient_http:get_base_uri(Connection) ++ "/services/search/jobs/",
+libget_jobs(C) ->
+    Uri = "/services/search/jobs/",
     Params = [],
-    Headers = [{"Authorization", Connection#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(Uri, Params, Headers),
+    Headers = [{"Authorization", C#splunkclient_conn.token}],
+    {ok, ResponseBody} = splunkclient_http:get(C, Uri, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
-libget_saved_searches(Connection) ->
-    Uri = splunkclient_http:get_base_uri(Connection) ++ "/services/saved/searches/",
+libget_saved_searches(C) ->
+    Uri = "/services/saved/searches/",
     Params = [],
-    Headers = [{"Authorization", Connection#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(Uri, Params, Headers),
+    Headers = [{"Authorization", C#splunkclient_conn.token}],
+    {ok, ResponseBody} = splunkclient_http:get(C, Uri, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
-liboneshot_search(Connection, SearchTerm) ->
-    Uri = splunkclient_http:get_base_uri(Connection) ++ "/services/search/jobs/",
+liboneshot_search(C, SearchTerm) ->
+    Uri = "/services/search/jobs/",
     Params = [{"exec_mode", "oneshot"}, {"search", "search " ++ SearchTerm}],
-    Headers = [{"Authorization", Connection#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:post(Uri, Params, Headers),
+    Headers = [{"Authorization", C#splunkclient_conn.token}],
+    {ok, ResponseBody} = splunkclient_http:post(C, Uri, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
