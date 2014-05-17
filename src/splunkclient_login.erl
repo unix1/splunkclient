@@ -19,6 +19,7 @@ start_link(Name, Connection) when is_atom(Name) ->
 
 %% init, set state
 init([Connection]) ->
+    splunkclient_http:init(Connection),
     S = Connection,
     {ok, S}.
 

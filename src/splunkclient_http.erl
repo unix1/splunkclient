@@ -1,10 +1,14 @@
 -module(splunkclient_http).
 -include("splunkclient.hrl").
--export([get/2, get/3, get/4, post/2, post/3, post/4]).
+-export([init/1, get/2, get/3, get/4, post/2, post/3, post/4]).
 
 %% ============================================================================
 %% API functions
 %% ============================================================================
+
+init(C) ->
+    HttpBackend = C#splunkclient_conn.http_backend,
+    ok = HttpBackend:init(C).
 
 get(C, RelUri) ->
     get(C, RelUri, [], []).
@@ -20,7 +24,7 @@ get(C, RelUri, Params, Headers) ->
         _Else ->
             build_query_string(Params, BaseUri ++ "?")
     end,
-    send_request(get, Uri, "", Headers, "").
+    send_request(C#splunkclient_conn.http_backend, get, Uri, "", Headers, "").
 
 post(C, RelUri) ->
     post(C, RelUri, [], []).
@@ -32,7 +36,7 @@ post(C, RelUri, Params, Headers) ->
     Uri = get_base_uri(C) ++ RelUri,
     Type = "application/x-www-form-urlencoded",
     Body = build_query_string(Params),
-    send_request(post, Uri, Body, Headers, Type).
+    send_request(C#splunkclient_conn.http_backend, post, Uri, Body, Headers, Type).
 
 %% ============================================================================
 %% Internal functions
@@ -56,16 +60,17 @@ build_query_string([{Name, Value}|Rest], Acc) ->
         Acc ++ "&" ++ http_uri:encode(Name) ++ "=" ++ http_uri:encode(Value)
     ).
 
-send_request(Method, Uri, "", Headers, "") ->
-    HTTPOptions = [{relaxed, true}],
-    Options = [],
-    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
-        httpc:request(Method, {Uri, Headers}, HTTPOptions, Options),
-    {ok, ResponseBody};
-send_request(Method, Uri, Body, Headers, Type) ->
-    HTTPOptions = [{relaxed, true}],
-    Options = [],
-    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
-        httpc:request(Method, {Uri, Headers, Type, Body}, HTTPOptions, Options),
-    {ok, ResponseBody}.
-
+send_request(HttpBackend, Method, Uri, Body, Headers, Type) ->
+    HttpBackend:send_request(Method, Uri, Body, Headers, Type).
+%send_request(Method, Uri, "", Headers, "") ->
+%    HTTPOptions = [{relaxed, true}],
+%    Options = [],
+%    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
+%        httpc:request(Method, {Uri, Headers}, HTTPOptions, Options),
+%    {ok, ResponseBody};
+%send_request(Method, Uri, Body, Headers, Type) ->
+%    HTTPOptions = [{relaxed, true}],
+%    Options = [],
+%    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
+%        httpc:request(Method, {Uri, Headers, Type, Body}, HTTPOptions, Options),
+%    {ok, ResponseBody}.

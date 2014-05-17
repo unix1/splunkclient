@@ -27,8 +27,12 @@ init([Config]) ->
     HandlerId = {splunkclient_service_event, make_ref()},
     gen_event:add_handler(splunkclient_service_eventman, HandlerId, [self()]),
     ConnectionName = proplists:get_value(connection, Config),
-    Connection = splunkclient_login:get_connection(ConnectionName),
-    S = #state{connection = Connection, event_handler_id = HandlerId},
+    HttpBackend = proplists:get_value(http_backend, Config),
+    Connection1 = splunkclient_login:get_connection(ConnectionName),
+    % override default connection http backend from service pool configuration
+    Connection2 = Connection1#splunkclient_conn{http_backend = HttpBackend},
+    splunkclient_http:init(Connection2),
+    S = #state{connection = Connection2, event_handler_id = HandlerId},
     {ok, S}.
 
 %% ============================================================================
