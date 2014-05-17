@@ -4,13 +4,12 @@
 -behaviour(gen_server).
 
 %% Boilerplate
--export([%start_link/0,
-         start_link/1, init/1, handle_call/3, handle_cast/2,
+-export([start_link/1, init/1, handle_call/3, handle_cast/2,
          handle_info/2, terminate/2, code_change/3]).
 
 %% API
 -export([get_indexes/1, get_jobs/1, get_saved_searches/1, oneshot_search/2]).
--export([update_connection_token/2, handle_event/2]).
+-export([update_connection_token/2]).
 
 %% state record
 -record (state, {connection = #splunkclient_conn{}, event_handler_id}).
@@ -22,15 +21,11 @@
 start_link(Config) ->
     gen_server:start_link(?MODULE, [Config], []).
 
-%% gen_event init, set state
-init([{event_handler, Pid}]) ->
-    {ok, Pid};
-
 %% gen_server init, set state
 init([Config]) ->
     % add event handler
-    HandlerId = {?MODULE, make_ref()},
-    gen_event:add_handler(splunkclient_service_eventman, HandlerId, [{event_handler, self()}]),
+    HandlerId = {splunkclient_service_event, make_ref()},
+    gen_event:add_handler(splunkclient_service_eventman, HandlerId, [self()]),
     ConnectionName = proplists:get_value(connection, Config),
     Connection = splunkclient_login:get_connection(ConnectionName),
     S = #state{connection = Connection, event_handler_id = HandlerId},
@@ -68,17 +63,8 @@ oneshot_search(ConnectionName, SearchTerm) ->
     poolboy:checkin(Pool, Worker),
     Result.
 
-%% ============================================================================
-%% Internal API functions
-%% ============================================================================
-
 update_connection_token(Pid, Token) ->
     gen_server:call(Pid, {update_token, Token}).
-
-% handle a gen_event callback, state is gen_server Pid
-handle_event({token, Token}, S) ->
-    update_connection_token(S, Token),
-    {ok, S}.
 
 %% ============================================================================
 %% Server functions
@@ -131,10 +117,8 @@ handle_cast(_Msg, State) -> {noreply, State}.
 
 handle_info(_Msg, State) -> {noreply, State}.
 
-terminate([{event_handler}], _State) ->
-    ok;
 terminate(_Reason, S) ->
-    gen_event:delete_handler(splunkclient_service_eventman, S#state.event_handler_id, [{event_handler}]),
+    gen_event:delete_handler(splunkclient_service_eventman, S#state.event_handler_id, []),
     ok.
 
 code_change(_OldVersion, State, _Extra) -> {ok, State}.
