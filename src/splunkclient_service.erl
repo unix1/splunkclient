@@ -12,7 +12,7 @@
 -export([update_connection_token/2]).
 
 %% state record
--record (state, {connection = #splunkclient_conn{}, event_handler_id}).
+-record (state, {connection = #splunkclient_conn{}, event_handler_id, http_state}).
 
 %% ============================================================================
 %% Supervision functions
@@ -31,8 +31,8 @@ init([Config]) ->
     Connection1 = splunkclient_login:get_connection(ConnectionName),
     % override default connection http backend from service pool configuration
     Connection2 = Connection1#splunkclient_conn{http_backend = HttpBackend},
-    splunkclient_http:init(Connection2),
-    S = #state{connection = Connection2, event_handler_id = HandlerId},
+    {ok, HttpState} = splunkclient_http:init(Connection2),
+    S = #state{connection = Connection2, event_handler_id = HandlerId, http_state = HttpState},
     {ok, S}.
 
 %% ============================================================================
@@ -123,7 +123,7 @@ handle_info(_Msg, State) -> {noreply, State}.
 
 terminate(_Reason, S) ->
     gen_event:delete_handler(splunkclient_service_eventman, S#state.event_handler_id, []),
-    ok.
+    ok = splunkclient_http:terminate(S#state.connection, S#state.http_state).
 
 code_change(_OldVersion, State, _Extra) -> {ok, State}.
 

@@ -1,6 +1,6 @@
 -module(splunkclient_http).
 -include("splunkclient.hrl").
--export([init/1, get/2, get/3, get/4, post/2, post/3, post/4]).
+-export([init/1, terminate/2, get/2, get/3, get/4, post/2, post/3, post/4]).
 
 %% ============================================================================
 %% API functions
@@ -8,7 +8,7 @@
 
 init(C) ->
     HttpBackend = C#splunkclient_conn.http_backend,
-    ok = HttpBackend:init(C).
+    {ok, _State} = HttpBackend:init(C).
 
 get(C, RelUri) ->
     get(C, RelUri, [], []).
@@ -37,6 +37,10 @@ post(C, RelUri, Params, Headers) ->
     Type = "application/x-www-form-urlencoded",
     Body = build_query_string(Params),
     send_request(C#splunkclient_conn.http_backend, post, Uri, Body, Headers, Type).
+
+terminate(C, State) ->
+    HttpBackend = C#splunkclient_conn.http_backend,
+    ok = HttpBackend:terminate(State).
 
 %% ============================================================================
 %% Internal functions

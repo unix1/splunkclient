@@ -2,9 +2,12 @@
 
 -behaviour(splunkclient_http_handler).
 
--export([init/1, send_request/5]).
+-export([init/1, terminate/1, send_request/5]).
 
-init(_) ->
+init(_Args) ->
+    {ok, 0}.
+
+terminate(_State) ->
     ok.
 
 send_request(Method, Uri, "", Headers, "") ->
