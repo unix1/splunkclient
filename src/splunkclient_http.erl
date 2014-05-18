@@ -1,46 +1,48 @@
 -module(splunkclient_http).
 -include("splunkclient.hrl").
--export([init/1, terminate/2, get/2, get/3, get/4, post/2, post/3, post/4]).
+-export([init/1, terminate/2, get/3, get/4, get/5, post/3, post/4, post/5]).
 
 %% ============================================================================
 %% API functions
 %% ============================================================================
 
 init(C) ->
-    HttpBackend = C#splunkclient_conn.http_backend,
-    {ok, _State} = HttpBackend:init(C).
+    Backend = C#splunkclient_conn.http_backend,
+    {ok, _State} = Backend:init(C).
 
-get(C, RelUri) ->
-    get(C, RelUri, [], []).
+get(C, State, Path) ->
+    get(C, State, Path, [], []).
 
-get(C, RelUri, Params) ->
-    get(C, RelUri, Params, []).
+get(C, State, Path, Params) ->
+    get(C, State, Path, Params, []).
 
-get(C, RelUri, Params, Headers) ->
-    BaseUri = get_base_uri(C) ++ RelUri,
+get(C, State, Path, Params, Headers) ->
+    BaseUri = get_base_uri(C) ++ Path,
     Uri = case Params of
         [] ->
             BaseUri;
         _Else ->
             build_query_string(Params, BaseUri ++ "?")
     end,
-    send_request(C#splunkclient_conn.http_backend, get, Uri, "", Headers, "").
+    Backend = C#splunkclient_conn.http_backend,
+    send_request(Backend, State, get, Uri, "", Headers, "").
 
-post(C, RelUri) ->
-    post(C, RelUri, [], []).
+post(C, State, Path) ->
+    post(C, State, Path, [], []).
 
-post(C, RelUri, Params) ->
-    post(C, RelUri, Params, []).
+post(C, State, Path, Params) ->
+    post(C, State, Path, Params, []).
 
-post(C, RelUri, Params, Headers) ->
-    Uri = get_base_uri(C) ++ RelUri,
+post(C, State, Path, Params, Headers) ->
+    Uri = get_base_uri(C) ++ Path,
     Type = "application/x-www-form-urlencoded",
     Body = build_query_string(Params),
-    send_request(C#splunkclient_conn.http_backend, post, Uri, Body, Headers, Type).
+    Backend = C#splunkclient_conn.http_backend,
+    send_request(Backend, State, post, Uri, Body, Headers, Type).
 
 terminate(C, State) ->
-    HttpBackend = C#splunkclient_conn.http_backend,
-    ok = HttpBackend:terminate(State).
+    Backend = C#splunkclient_conn.http_backend,
+    ok = Backend:terminate(State).
 
 %% ============================================================================
 %% Internal functions
@@ -64,5 +66,5 @@ build_query_string([{Name, Value}|Rest], Acc) ->
         Acc ++ "&" ++ http_uri:encode(Name) ++ "=" ++ http_uri:encode(Value)
     ).
 
-send_request(HttpBackend, Method, Uri, Body, Headers, Type) ->
-    HttpBackend:send_request(Method, Uri, Body, Headers, Type).
+send_request(Backend, State, Method, Uri, Body, Headers, Type) ->
+    Backend:send_request(State, Method, Uri, Body, Headers, Type).

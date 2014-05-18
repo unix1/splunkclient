@@ -76,7 +76,8 @@ update_connection_token(Pid, Token) ->
 
 handle_call({get_indexes}, _From, S) ->
     Connection = S#state.connection,
-    case libget_indexes(Connection) of
+    HttpState = S#state.http_state,
+    case libget_indexes(Connection, HttpState) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -86,7 +87,8 @@ handle_call({get_indexes}, _From, S) ->
     end;
 handle_call({get_jobs}, _From, S) ->
     Connection = S#state.connection,
-    case libget_jobs(Connection) of
+    HttpState = S#state.http_state,
+    case libget_jobs(Connection, HttpState) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -96,7 +98,8 @@ handle_call({get_jobs}, _From, S) ->
     end;
 handle_call({get_saved_searches}, _From, S) ->
     Connection = S#state.connection,
-    case libget_saved_searches(Connection) of
+    HttpState = S#state.http_state,
+    case libget_saved_searches(Connection, HttpState) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -106,7 +109,8 @@ handle_call({get_saved_searches}, _From, S) ->
     end;
 handle_call({oneshot_search, SearchTerm}, _From, S) ->
     Connection = S#state.connection,
-    case liboneshot_search(Connection, SearchTerm) of
+    HttpState = S#state.http_state,
+    case liboneshot_search(Connection, HttpState, SearchTerm) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -131,39 +135,38 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 %% Internal functions
 %% ============================================================================
 
-libget_indexes(C) ->
-    Uri = "/services/data/indexes/",
+libget_indexes(C, HttpState) ->
+    Path = "/services/data/indexes/",
     Params = [],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(C, Uri, Params, Headers),
+    {ok, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
-libget_jobs(C) ->
-    Uri = "/services/search/jobs/",
+libget_jobs(C, HttpState) ->
+    Path = "/services/search/jobs/",
     Params = [],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(C, Uri, Params, Headers),
+    {ok, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
-libget_saved_searches(C) ->
-    Uri = "/services/saved/searches/",
+libget_saved_searches(C, HttpState) ->
+    Path = "/services/saved/searches/",
     Params = [],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(C, Uri, Params, Headers),
+    {ok, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
-liboneshot_search(C, SearchTerm) ->
-    Uri = "/services/search/jobs/",
+liboneshot_search(C, HttpState, SearchTerm) ->
+    Path = "/services/search/jobs/",
     Params = [{"exec_mode", "oneshot"}, {"search", "search " ++ SearchTerm}],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:post(C, Uri, Params, Headers),
+    {ok, ResponseBody} = splunkclient_http:post(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
-

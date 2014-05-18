@@ -6,7 +6,8 @@
 -callback terminate(Args :: list(term())) ->
     'ok'|tuple('error', Reason :: string()).
 
--callback send_request(Method :: 'get'|'post',
+-callback send_request(State :: term(),
+                       Method :: 'delete'|'head'|'get'|'patch'|'post'|'put',
                        Uri :: string(),
                        Body :: string(),
                        Headers :: list(term()),

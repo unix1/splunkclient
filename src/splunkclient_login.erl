@@ -9,6 +9,9 @@
 %% API
 -export([login/1, get_token/1, get_connection/1, get_pool/1]).
 
+%% state record
+-record (state, {connection = #splunkclient_conn{}, http_state}).
+
 %% ============================================================================
 %% Supervision functions
 %% ============================================================================
@@ -19,8 +22,8 @@ start_link(Name, Connection) when is_atom(Name) ->
 
 %% init, set state
 init([Connection]) ->
-    splunkclient_http:init(Connection),
-    S = Connection,
+    {ok, HttpState} = splunkclient_http:init(Connection),
+    S = #state{connection = Connection, http_state = HttpState},
     {ok, S}.
 
 %% ============================================================================
@@ -47,10 +50,10 @@ get_pool(ConnectionName) ->
 %% ============================================================================
 
 handle_call({login}, _From, S) ->
-    case liblogin(S) of
+    case liblogin(S#state.connection, S#state.http_state) of
         {ok, Token} ->
             gen_event:notify(splunkclient_service_eventman, {token, Token}),
-            NewState = S#splunkclient_conn{token = Token},
+            NewState = S#state{connection = S#state.connection#splunkclient_conn{token = Token}},
             {reply, ok, NewState};
         {error, Reason} ->
             {stop, error, Reason, S};
@@ -58,9 +61,9 @@ handle_call({login}, _From, S) ->
             {stop, error, "Unknown error", S}
     end;
 handle_call({get_token}, _From, S) ->
-    {reply, S#splunkclient_conn.token, S};
+    {reply, S#state.connection#splunkclient_conn.token, S};
 handle_call({get_connection}, _From, S) ->
-    {reply, S, S}.
+    {reply, S#state.connection, S}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
@@ -74,10 +77,10 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 %% Internal functions
 %% ============================================================================
 
-liblogin(C) ->
+liblogin(C, HttpState) ->
     Params = [{"username", C#splunkclient_conn.user},
               {"password", C#splunkclient_conn.pass}],
-    {ok, ResponseBody} = splunkclient_http:post(C, "/services/auth/login", Params),
+    {ok, ResponseBody} = splunkclient_http:post(C, HttpState, "/services/auth/login", Params),
     {XML, _} = xmerl_scan:string(ResponseBody),
     [#xmlText{value = SessionKey}] = xmerl_xpath:string("/response/sessionKey/text()", XML),
     {ok, "Splunk " ++ SessionKey}.
