@@ -8,7 +8,10 @@
 
 init(C) ->
     Backend = C#splunkclient_conn.http_backend,
-    {ok, _State} = Backend:init(C).
+    Protocol = C#splunkclient_conn.protocol,
+    Host = C#splunkclient_conn.host,
+    Port = C#splunkclient_conn.port,
+    {ok, _State} = Backend:init(Protocol, Host, Port).
 
 get(C, State, Path) ->
     get(C, State, Path, [], []).
@@ -16,16 +19,16 @@ get(C, State, Path) ->
 get(C, State, Path, Params) ->
     get(C, State, Path, Params, []).
 
-get(C, State, Path, Params, Headers) ->
-    BaseUri = get_base_uri(C) ++ Path,
-    Uri = case Params of
+get(C, State, BasePath, Params, Headers) ->
+    Path = case Params of
         [] ->
-            BaseUri;
+            BasePath;
         _Else ->
-            build_query_string(Params, BaseUri ++ "?")
+            build_query_string(Params, BasePath ++ "?")
     end,
     Backend = C#splunkclient_conn.http_backend,
-    send_request(Backend, State, get, Uri, "", Headers, "").
+    Request = get_request(get, C, Path, "", Headers, ""),
+    send_request(Backend, State, Request).
 
 post(C, State, Path) ->
     post(C, State, Path, [], []).
@@ -34,11 +37,11 @@ post(C, State, Path, Params) ->
     post(C, State, Path, Params, []).
 
 post(C, State, Path, Params, Headers) ->
-    Uri = get_base_uri(C) ++ Path,
     Type = "application/x-www-form-urlencoded",
     Body = build_query_string(Params),
     Backend = C#splunkclient_conn.http_backend,
-    send_request(Backend, State, post, Uri, Body, Headers, Type).
+    Request = get_request(post, C, Path, Body, Headers, Type),
+    send_request(Backend, State, Request).
 
 terminate(C, State) ->
     Backend = C#splunkclient_conn.http_backend,
@@ -48,12 +51,15 @@ terminate(C, State) ->
 %% Internal functions
 %% ============================================================================
 
-get_base_uri(C) ->
-    Protocol = C#splunkclient_conn.protocol,
-    Host = C#splunkclient_conn.host,
-    Port = C#splunkclient_conn.port,
-    Uri = Protocol ++ "://" ++ Host ++ ":" ++ Port,
-    Uri.
+get_request(Method, C, Path, Body, Headers, Type) ->
+    #splunkclient_http{method = Method,
+                       protocol = C#splunkclient_conn.protocol,
+                       host = C#splunkclient_conn.host,
+                       port = C#splunkclient_conn.port,
+                       path = Path,
+                       body = Body,
+                       headers = Headers,
+                       type = Type}.
 
 build_query_string(Params) ->
     build_query_string(Params, "").
@@ -66,5 +72,5 @@ build_query_string([{Name, Value}|Rest], Acc) ->
         Acc ++ "&" ++ http_uri:encode(Name) ++ "=" ++ http_uri:encode(Value)
     ).
 
-send_request(Backend, State, Method, Uri, Body, Headers, Type) ->
-    Backend:send_request(State, Method, Uri, Body, Headers, Type).
+send_request(Backend, State, Request) ->
+    Backend:send_request(State, Request).
