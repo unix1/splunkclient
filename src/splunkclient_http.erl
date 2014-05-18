@@ -66,15 +66,3 @@ build_query_string([{Name, Value}|Rest], Acc) ->
 
 send_request(HttpBackend, Method, Uri, Body, Headers, Type) ->
     HttpBackend:send_request(Method, Uri, Body, Headers, Type).
-%send_request(Method, Uri, "", Headers, "") ->
-%    HTTPOptions = [{relaxed, true}],
-%    Options = [],
-%    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
-%        httpc:request(Method, {Uri, Headers}, HTTPOptions, Options),
-%    {ok, ResponseBody};
-%send_request(Method, Uri, Body, Headers, Type) ->
-%    HTTPOptions = [{relaxed, true}],
-%    Options = [],
-%    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
-%        httpc:request(Method, {Uri, Headers, Type, Body}, HTTPOptions, Options),
-%    {ok, ResponseBody}.
