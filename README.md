@@ -8,13 +8,6 @@ Current Status
 
 This is currently a development PoC. You can log in to any number of configured Splunk instances, issue "oneshot" searches and get back XML responses.
 
-Installation
-------------
-
-* compile
-
-      `rebar get-deps && rebar compile`
-
 Configure
 ---------
 
@@ -28,23 +21,25 @@ Optionally edit the included `splunkclient.config` file. You can:
 
 * change default pool and worker configuration
 
+Installation
+------------
+
+* compile
+
+      `make`
+
 Usage
 -----
 
-* start Erlang shell
+* start with Erlang console
 
-      `erl -pa ebin/ -pa deps/poolboy/ebin/ -config splunkclient.config`
-
-* start splunkclient
-
-      `splunkclient:start().`
+      `./_rel/bin/splunkclient_release-1.0.0 console`
 
 * log in to the default connection host, or a specified named connection
 
       `splunkclient:login().`
 
       `splunkclient:login(splunkclient_conn_another).`
-
 
 * run a simple "oneshot" search against the default or a specified named connection
 
@@ -56,5 +51,6 @@ Usage
 
       `splunkclient:get_indexes().`
 
-      `splunkclient:get_saved_searches().`
+      `splunkclient:get_jobs().`
 
+      `splunkclient:get_saved_searches().`

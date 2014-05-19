@@ -1,6 +1,7 @@
 {application, splunkclient,
  [{description, "Unofficial Splunk SDK Client in Erlang/OTP"},
   {vsn, "1.0.0"},
+  {modules, []},
   {registered, []},
   {applications, [
                   kernel,

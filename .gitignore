@@ -1,5 +1,9 @@
 .eunit
-deps
+.erlang.mk.packages.*
 *.o
 *.beam
 *.plt
+_rel
+deps
+ebin
+relx
