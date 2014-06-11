@@ -19,11 +19,11 @@ send_request(_State, #splunkclient_http{method = Method,
                                         headers = Headers,
                                         type = ""}) ->
     HTTPOptions = [{relaxed, true}],
-    Options = [],
+    Options = [{body_format, binary}],
     Uri = get_uri(Protocol, Host, Port, Path),
-    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
+    {ok, {{_Version, Status, _ReasonPhrase}, ResponseHeaders, ResponseBody}} =
         httpc:request(Method, {Uri, Headers}, HTTPOptions, Options),
-    {ok, ResponseBody};
+    {ok, Status, ResponseHeaders, ResponseBody};
 send_request(_State, #splunkclient_http{method = Method,
                                         protocol = Protocol,
                                         host = Host,
@@ -33,11 +33,11 @@ send_request(_State, #splunkclient_http{method = Method,
                                         headers = Headers,
                                         type = Type}) ->
     HTTPOptions = [{relaxed, true}],
-    Options = [],
+    Options = [{body_format, binary}],
     Uri = get_uri(Protocol, Host, Port, Path),
-    {ok, {{_Version, 200, _ReasonPhrase}, _ResponseHeaders, ResponseBody}} =
+    {ok, {{_Version, Status, _ReasonPhrase}, ResponseHeaders, ResponseBody}} =
         httpc:request(Method, {Uri, Headers, Type, Body}, HTTPOptions, Options),
-    {ok, ResponseBody}.
+    {ok, Status, ResponseHeaders, ResponseBody}.
 
 terminate(_State) ->
     ok.
@@ -47,4 +47,4 @@ terminate(_State) ->
 %% ============================================================================
 
 get_uri(Protocol, Host, Port, Path) ->
-    Protocol ++ "://" ++ Host ++ ":" ++ Port ++ Path.
+    Protocol ++ "://" ++ Host ++ ":" ++ integer_to_list(Port) ++ Path.

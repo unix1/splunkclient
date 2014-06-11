@@ -139,7 +139,7 @@ libget_indexes(C, HttpState) ->
     Path = "/services/data/indexes/",
     Params = [],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
+    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
@@ -148,7 +148,7 @@ libget_jobs(C, HttpState) ->
     Path = "/services/search/jobs/",
     Params = [],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
+    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
@@ -157,7 +157,7 @@ libget_saved_searches(C, HttpState) ->
     Path = "/services/saved/searches/",
     Params = [],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
+    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
@@ -166,7 +166,7 @@ liboneshot_search(C, HttpState, SearchTerm) ->
     Path = "/services/search/jobs/",
     Params = [{"exec_mode", "oneshot"}, {"search", "search " ++ SearchTerm}],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, ResponseBody} = splunkclient_http:post(C, HttpState, Path, Params, Headers),
+    {ok, 200, _, ResponseBody} = splunkclient_http:post(C, HttpState, Path, Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.

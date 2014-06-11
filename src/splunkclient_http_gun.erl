@@ -3,7 +3,7 @@
 -behaviour(splunkclient_http_handler).
 -export([init/3, terminate/1, send_request/2]).
 
--record (state, {pid}).
+-record (state, {pid, mref}).
 
 %% ============================================================================
 %% Behavior callbacks
@@ -11,12 +11,13 @@
 
 init(Protocol, Host, Port) ->
     Type = if Protocol =:= "https" -> ssl; true -> tcp end,
-    {ok, Pid} = gun:open(Host, Port, [{type, Type}]),
-    _Mref = monitor(process, Pid),
-    S = #state{pid = Pid},
+    Opts = [{type, Type}, {keepalive, 500}, {retry_timeout, 500}],
+    {ok, Pid} = gun:open(Host, Port, Opts),
+    Mref = monitor(process, Pid),
+    S = #state{pid = Pid, mref = Mref},
     {ok, S}.
 
-send_request(#state{pid = Pid}, #splunkclient_http{method = get,
+send_request(#state{pid = Pid, mref = Mref}, #splunkclient_http{method = get,
                                                    protocol = _Protocol,
                                                    host = _Host,
                                                    port = _Port,
@@ -24,9 +25,10 @@ send_request(#state{pid = Pid}, #splunkclient_http{method = get,
                                                    body = "",
                                                    headers = Headers,
                                                    type = ""}) ->
+    ok = receive_down(Pid, Mref),
     StreamRef = gun:get(Pid, Path, Headers),
-    {ok, _Status, _ResponseHeaders, _ResponseBody} = receive_data(Pid, StreamRef);
-send_request(#state{pid = Pid}, #splunkclient_http{method = Method,
+    {ok, _Status, _Headers, _Body} = receive_data(Pid, Mref, StreamRef);
+send_request(#state{pid = Pid, mref = Mref}, #splunkclient_http{method = Method,
                                                    protocol = _Protocol,
                                                    host = _Host,
                                                    port = _Port,
@@ -35,37 +37,47 @@ send_request(#state{pid = Pid}, #splunkclient_http{method = Method,
                                                    headers = Headers0,
                                                    type = Type}) ->
     Headers = [{"content-type", Type} | Headers0],
+    ok = receive_down(Pid, Mref),
     StreamRef = gun:Method(Pid, Path, Headers, Body),
-    {ok, _Status, _ResponseHeaders, _ResponseBody} = receive_data(Pid, StreamRef).
+    {ok, _Status, _Headers, _Body} = receive_data(Pid, Mref, StreamRef).
 
-receive_data(Pid, StreamRef) ->
+receive_data(Pid, Mref, StreamRef) ->
     receive
-        {'DOWN', _Tag, _, _, Reason} ->
-            % TODO remove error logger
-            io:format("gun process disconnected with reason: ~s~n", [Reason]),
-            exit(Reason);
+        {'DOWN', Mref, process, Pid, Reason} ->
+            {error, incomplete, Reason};
         {gun_response, Pid, StreamRef, fin, Status, Headers} ->
             {ok, Status, Headers, <<>>};
         {gun_response, Pid, StreamRef, nofin, Status, Headers} ->
-            {ok, ResponseBody} = receive_data_loop(Pid, StreamRef, <<>>),
-            {ok, Status, Headers, ResponseBody}
-    after 1000 ->
-        exit(timeout)
+            {ok, ResponseBody} = receive_data_loop(Pid, Mref, StreamRef, <<>>),
+            {ok, Status, Headers, ResponseBody};
+        Other ->
+            io:format("gun process got message: ~s~n", [Other])
+    after 5000 ->
+        {error, timeout}
     end.
 
-receive_data_loop(Pid, StreamRef, Acc) ->
+receive_data_loop(Pid, Mref, StreamRef, Acc) ->
     receive
-        {'DOWN', _Tag, _, _, Reason} ->
-            io:format("error receiving (incomplete) with reason: ~s~n", [Reason]),
-            {error, incomplete};
+        {'DOWN', Mref, process, Pid, Reason} ->
+            {error, incomplete, Reason};
         {gun_data, Pid, StreamRef, nofin, Data} ->
-            io:format("~s~n", [Data]),
-            receive_data_loop(Pid, StreamRef, [Acc, Data]);
+            receive_data_loop(Pid, Mref, StreamRef, [Acc, Data]);
         {gun_data, Pid, StreamRef, fin, Data} ->
-            io:format("~s~n", [Data]),
-            {ok, iolist_to_binary([Acc, Data])}
-    after 1000 ->
+            {ok, iolist_to_binary([Acc, Data])};
+        Other ->
+            io:format("gun process got message: ~s~n", [Other])
+    after 5000 ->
         {error, timeout}
+    end.
+
+receive_down(Pid, Mref) ->
+    receive
+        {'DOWN', Mref, process, Pid, Reason} ->
+            {error, Reason};
+        Other ->
+            {error, Other}
+    after 0 ->
+        ok
     end.
 
 terminate(S) ->

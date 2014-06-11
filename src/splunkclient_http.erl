@@ -66,6 +66,10 @@ build_query_string(Params) ->
 
 build_query_string([], Acc) ->
     Acc;
+build_query_string([{Name, Value}|Rest], "") ->
+    build_query_string(
+        Rest,
+        http_uri:encode(Name) ++ "=" ++ http_uri:encode(Value));
 build_query_string([{Name, Value}|Rest], Acc) ->
     build_query_string(
         Rest,

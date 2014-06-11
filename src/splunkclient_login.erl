@@ -69,7 +69,8 @@ handle_cast(_Msg, State) -> {noreply, State}.
 
 handle_info(_Msg, State) -> {noreply, State}.
 
-terminate(_Reason, _State) -> ok.
+terminate(_Reason, S) ->
+    ok = splunkclient_http:terminate(S#state.connection, S#state.http_state).
 
 code_change(_OldVersion, State, _Extra) -> {ok, State}.
 
@@ -80,8 +81,8 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 liblogin(C, HttpState) ->
     Params = [{"username", C#splunkclient_conn.user},
               {"password", C#splunkclient_conn.pass}],
-    {ok, ResponseBody} = splunkclient_http:post(C, HttpState, "/services/auth/login", Params),
-    {XML, _} = xmerl_scan:string(ResponseBody),
+    {ok, 200, _ResponseHeaders, ResponseBody} = splunkclient_http:post(C, HttpState, "/services/auth/login", Params),
+    {XML, _} = xmerl_scan:string(binary_to_list(ResponseBody)),
     [#xmlText{value = SessionKey}] = xmerl_xpath:string("/response/sessionKey/text()", XML),
     {ok, "Splunk " ++ SessionKey}.
 
