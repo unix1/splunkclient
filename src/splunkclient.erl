@@ -18,6 +18,8 @@
 -export([oneshot_search/1, oneshot_search/2]).
 -export([send_simple/2, send_simple/3]).
 
+-define(DEFAULT_CONN, default).
+
 %% ============================================================================
 %% Behavior callbacks
 %% ============================================================================
@@ -54,37 +56,37 @@ stop() ->
     application:stop(crypto).
 
 get_indexes() ->
-    get_indexes(splunkclient_conn_default).
+    get_indexes(?DEFAULT_CONN).
 
 get_indexes(Connection) ->
     splunkclient_service:get_indexes(Connection).
 
 get_jobs() ->
-    get_jobs(splunkclient_conn_default).
+    get_jobs(?DEFAULT_CONN).
 
 get_jobs(Connection) ->
     splunkclient_service:get_jobs(Connection).
 
 get_saved_searches() ->
-    get_saved_searches(splunkclient_conn_default).
+    get_saved_searches(?DEFAULT_CONN).
 
 get_saved_searches(Connection) ->
     splunkclient_service:get_saved_searches(Connection).
 
 login() ->
-    login(splunkclient_conn_default).
+    login(?DEFAULT_CONN).
 
 login(Name) ->
     splunkclient_login:login(Name).
 
 oneshot_search(Term) ->
-    oneshot_search(splunkclient_conn_default, Term).
+    oneshot_search(?DEFAULT_CONN, Term).
 
 oneshot_search(Connection, Term) ->
     splunkclient_service:oneshot_search(Connection, Term).
 
 send_simple(Event, Params) ->
-    send_simple(splunkclient_conn_default, Event, Params).
+    send_simple(?DEFAULT_CONN, Event, Params).
 
 send_simple(Connection, Event, Params) ->
     splunkclient_service:send_simple(Connection, Event, Params).
