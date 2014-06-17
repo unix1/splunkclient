@@ -1,9 +1,12 @@
 -module(splunkclient_sup).
+
 -include("splunkclient.hrl").
+
 -behaviour(supervisor).
 
 %% Boilerplate
--export([start_link/1, init/1]).
+-export([start_link/1]).
+-export([init/1]).
 
 %% Helper macro for declaring children of supervisor
 -define(CHILD(Id, Module, Args, Type), {Id, {Module, start_link, Args}, permanent, 5000, Type, [Module]}).

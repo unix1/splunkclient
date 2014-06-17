@@ -3,15 +3,23 @@
 -include_lib("xmerl/include/xmerl.hrl").
 -behaviour(gen_server).
 
-%% Boilerplate
--export([start_link/1, init/1, handle_call/3, handle_cast/2,
-         handle_info/2, terminate/2, code_change/3]).
+%% Behavior callbacks
+-export([start_link/1]).
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([terminate/2]).
+-export([code_change/3]).
 
-%% API
--export([get_indexes/1, get_jobs/1, get_saved_searches/1, oneshot_search/2]).
+%% User functions
+-export([get_indexes/1]).
+-export([get_jobs/1]).
+-export([get_saved_searches/1]).
+-export([oneshot_search/2]).
 -export([update_connection_token/2]).
 
-%% state record
+%% State record
 -record (state, {connection = #splunkclient_conn{}, event_handler_id, http_state}).
 
 %% ============================================================================
@@ -36,7 +44,7 @@ init([Config]) ->
     {ok, S}.
 
 %% ============================================================================
-%% User API functions
+%% User functions
 %% ============================================================================
 
 get_indexes(ConnectionName) ->

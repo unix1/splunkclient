@@ -1,14 +1,21 @@
 -module(splunkclient).
+
 -include("splunkclient.hrl").
+
 -behaviour(application).
 
 %% Application callbacks
--export([start/2, stop/1]).
+-export([start/2]).
+-export([stop/1]).
 
 %% User functions
--export([start/0, stop/0, login/0, login/1, get_indexes/0, get_indexes/1, get_jobs/0,
-         get_jobs/1, get_saved_searches/0, get_saved_searches/1,
-         oneshot_search/1, oneshot_search/2]).
+-export([start/0]).
+-export([stop/0]).
+-export([login/0, login/1]).
+-export([get_indexes/0, get_indexes/1]).
+-export([get_jobs/0, get_jobs/1]).
+-export([get_saved_searches/0, get_saved_searches/1]).
+-export([oneshot_search/1, oneshot_search/2]).
 
 %% ============================================================================
 %% Application callbacks
@@ -26,7 +33,7 @@ stop(_State) ->
     ok.
 
 %% ============================================================================
-%% API functions
+%% User functions
 %% ============================================================================
 
 start() ->

@@ -1,9 +1,15 @@
 -module(splunkclient_http).
+
 -include("splunkclient.hrl").
--export([init/1, terminate/2, get/3, get/4, get/5, post/3, post/4, post/5]).
+
+%% User functions
+-export([init/1]).
+-export([terminate/2]).
+-export([get/3, get/4, get/5]).
+-export([post/3, post/4, post/5]).
 
 %% ============================================================================
-%% API functions
+%% User functions
 %% ============================================================================
 
 init(C) ->

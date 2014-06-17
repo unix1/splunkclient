@@ -1,15 +1,26 @@
 -module(splunkclient_login).
+
 -include("splunkclient.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+
 -behaviour(gen_server).
 
-%% Boilerplate
--export([start_link/2, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+%% Behavior callbacks
+-export([start_link/2]).
+-export([init/1]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([terminate/2]).
+-export([code_change/3]).
 
-%% API
--export([login/1, get_token/1, get_connection/1, get_pool/1]).
+%% User functions
+-export([login/1]).
+-export([get_token/1]).
+-export([get_connection/1]).
+-export([get_pool/1]).
 
-%% state record
+%% State record
 -record (state, {connection = #splunkclient_conn{}, http_state}).
 
 %% ============================================================================
@@ -27,7 +38,7 @@ init([Connection]) ->
     {ok, S}.
 
 %% ============================================================================
-%% API functions
+%% User functions
 %% ============================================================================
 
 login(Name) ->

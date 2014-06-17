@@ -1,7 +1,13 @@
 -module(splunkclient_http_gun).
+
 -include("splunkclient.hrl").
+
 -behaviour(splunkclient_http_handler).
--export([init/3, terminate/1, send_request/2]).
+
+%% Behavior callbacks
+-export([init/3]).
+-export([terminate/1]).
+-export([send_request/2]).
 
 -record (state, {pid, mref}).
 
