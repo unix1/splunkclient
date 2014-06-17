@@ -47,6 +47,10 @@ Usage
 
       `splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").`
 
+* send an event
+
+      `splunkclient:send_simple(<<"2014-06-16 09:19:43 Tester,Record">>, [{"host","localhost"},{"source","testing1"},{"sourcetype","test-type"}]).`
+
 * other useful functions
 
       `splunkclient:get_indexes().`
