@@ -6,20 +6,18 @@ Unofficial Splunk SDK Client in Erlang/OTP
 Current Status
 --------------
 
-This is currently a development PoC. You can log in to any number of configured Splunk instances, issue "oneshot" searches and get back XML responses.
+This is currently a development PoC. You can log in to any number of configured Splunk instances, send events, issue "oneshot" searches and get back XML responses.
 
 Configure
 ---------
 
 Optionally edit the included `splunkclient.config` file. You can:
 
-* change default parameters such as host name, port, protocol, username, password
+* change connection parameters such as host name, port, protocol, username, password
 
 * add any number of other hosts to connect to in the `connections` tuple; just make sure each individual connection has a unique tuple name
 
-* note that when calling functions without specifying a connection name, the `splunkclient_conn_default` will be used, so please don't change the name of this default entry
-
-* change default pool and worker configuration
+* change default pool configuration, e.g. number of workers available for each connection pool, HTTP client backend, etc.
 
 Installation
 ------------
@@ -31,9 +29,9 @@ Installation
 Usage
 -----
 
-* start with Erlang console
+* to start in Erlang console
 
-      `./_rel/bin/splunkclient_release-1.0.0 console`
+      `_rel/bin/splunkclient_release console`
 
 * log in to the default connection host, or a specified named connection
 
@@ -58,3 +56,5 @@ Usage
       `splunkclient:get_jobs().`
 
       `splunkclient:get_saved_searches().`
+
+* note that when calling functions without specifying a connection name, the `splunkclient_conn_default` will be used, so please don't change the name of this default entry in configuration
