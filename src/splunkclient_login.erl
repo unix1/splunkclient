@@ -90,9 +90,9 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 %% ============================================================================
 
 liblogin(C, HttpState) ->
-    Params = [{"username", C#splunkclient_conn.user},
-              {"password", C#splunkclient_conn.pass}],
-    {ok, 200, _ResponseHeaders, ResponseBody} = splunkclient_http:post(C, HttpState, "/services/auth/login", Params),
+    Body = [{"username", C#splunkclient_conn.user},
+            {"password", C#splunkclient_conn.pass}],
+    {ok, 200, _ResponseHeaders, ResponseBody} = splunkclient_http:post(C, HttpState, "/services/auth/login", [], [], Body),
     {XML, _} = xmerl_scan:string(binary_to_list(ResponseBody)),
     [#xmlText{value = SessionKey}] = xmerl_xpath:string("/response/sessionKey/text()", XML),
     {ok, "Splunk " ++ SessionKey}.

@@ -6,7 +6,7 @@
 -export([init/1]).
 -export([terminate/2]).
 -export([get/3, get/4, get/5]).
--export([post/3, post/4, post/5]).
+-export([post/6]).
 
 %% ============================================================================
 %% User functions
@@ -36,17 +36,17 @@ get(C, State, BasePath, Params, Headers) ->
     Request = get_request(get, C, Path, "", Headers, ""),
     send_request(Backend, State, Request).
 
-post(C, State, Path) ->
-    post(C, State, Path, [], []).
-
-post(C, State, Path, Params) ->
-    post(C, State, Path, Params, []).
-
-post(C, State, Path, Params, Headers) ->
+post(C, State, BasePath, Params, Headers, BodyParams) when is_list(BodyParams) ->
     Type = "application/x-www-form-urlencoded",
-    Body = build_query_string(Params),
+    Path = get_path(BasePath, Params),
+    Body = list_to_binary(build_query_string(BodyParams)),
     Backend = C#splunkclient_conn.http_backend,
     Request = get_request(post, C, Path, Body, Headers, Type),
+    send_request(Backend, State, Request);
+post(C, State, BasePath, Params, Headers, Body) when is_binary(Body) ->
+    Path = get_path(BasePath, Params),
+    Backend = C#splunkclient_conn.http_backend,
+    Request = get_request(post, C, Path, Body, Headers, ""),
     send_request(Backend, State, Request).
 
 terminate(C, State) ->
@@ -66,6 +66,14 @@ get_request(Method, C, Path, Body, Headers, Type) ->
                        body = Body,
                        headers = Headers,
                        type = Type}.
+
+get_path(BasePath, Params) ->
+    case Params of
+        [] ->
+            BasePath;
+        _Else ->
+            build_query_string(Params, BasePath ++ "?")
+    end.
 
 build_query_string(Params) ->
     build_query_string(Params, "").

@@ -16,6 +16,7 @@
 -export([get_jobs/0, get_jobs/1]).
 -export([get_saved_searches/0, get_saved_searches/1]).
 -export([oneshot_search/1, oneshot_search/2]).
+-export([send_simple/2, send_simple/3]).
 
 %% ============================================================================
 %% Application callbacks
@@ -81,3 +82,9 @@ oneshot_search(Term) ->
 
 oneshot_search(Connection, Term) ->
     splunkclient_service:oneshot_search(Connection, Term).
+
+send_simple(Event, Params) ->
+    send_simple(splunkclient_conn_default, Event, Params).
+
+send_simple(Connection, Event, Params) ->
+    splunkclient_service:send_simple(Connection, Event, Params).

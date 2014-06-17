@@ -1,6 +1,8 @@
 -module(splunkclient_service).
+
 -include("splunkclient.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+
 -behaviour(gen_server).
 
 %% Behavior callbacks
@@ -17,6 +19,7 @@
 -export([get_jobs/1]).
 -export([get_saved_searches/1]).
 -export([oneshot_search/2]).
+-export([send_simple/3]).
 -export([update_connection_token/2]).
 
 %% State record
@@ -75,6 +78,13 @@ oneshot_search(ConnectionName, SearchTerm) ->
     poolboy:checkin(Pool, Worker),
     Result.
 
+send_simple(ConnectionName, Event, Params) ->
+    Pool = splunkclient_login:get_pool(ConnectionName),
+    Worker = poolboy:checkout(Pool),
+    Result = gen_server:call(Worker, {send_simple, Event, Params}),
+    poolboy:checkin(Pool, Worker),
+    Result.
+
 update_connection_token(Pid, Token) ->
     gen_server:call(Pid, {update_token, Token}).
 
@@ -126,6 +136,17 @@ handle_call({oneshot_search, SearchTerm}, _From, S) ->
         _Else ->
             {stop, error, "Unknown error", S}
     end;
+handle_call({send_simple, Event, Params}, _From, S) ->
+    Connection = S#state.connection,
+    HttpState = S#state.http_state,
+    case libsend_simple(Connection, HttpState, Event, Params) of
+        ok ->
+            {reply, ok, S};
+        {error, Reason} ->
+            {stop, error, Reason, S};
+        _Else ->
+            {stop, error, "Unknown error", S}
+    end;
 handle_call({update_token, Token}, _From, S) ->
     {reply, ok, S#state{connection = S#state.connection#splunkclient_conn{token = Token}}}.
 
@@ -172,9 +193,15 @@ libget_saved_searches(C, HttpState) ->
 
 liboneshot_search(C, HttpState, SearchTerm) ->
     Path = "/services/search/jobs/",
-    Params = [{"exec_mode", "oneshot"}, {"search", "search " ++ SearchTerm}],
+    Body = [{"exec_mode", "oneshot"}, {"search", "search " ++ SearchTerm}],
     Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, 200, _, ResponseBody} = splunkclient_http:post(C, HttpState, Path, Params, Headers),
+    {ok, 200, _, ResponseBody} = splunkclient_http:post(C, HttpState, Path, [], Headers, Body),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
+
+libsend_simple(C, HttpState, Event, Params) ->
+    Path = "/services/receivers/simple",
+    Headers = [{"Authorization", C#splunkclient_conn.token}],
+    {ok, 200, _, _} = splunkclient_http:post(C, HttpState, Path, Params, Headers, Event),
+    ok.
