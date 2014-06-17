@@ -4,7 +4,7 @@
 
 -behaviour(application).
 
-%% Application callbacks
+%% Behavior callbacks
 -export([start/2]).
 -export([stop/1]).
 
@@ -19,7 +19,7 @@
 -export([send_simple/2, send_simple/3]).
 
 %% ============================================================================
-%% Application callbacks
+%% Behavior callbacks
 %% ============================================================================
 
 start(_StartType, _StartArgs) ->

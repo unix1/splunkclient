@@ -4,19 +4,21 @@
 
 -behaviour(supervisor).
 
-%% Boilerplate
+%% User functions
 -export([start_link/0]).
+
+%% Behavior callbacks
 -export([init/1]).
 
 %% ============================================================================
-%% API functions
+%% User functions
 %% ============================================================================
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% ============================================================================
-%% Supervisor callbacks
+%% Behavior callbacks
 %% ============================================================================
 
 init([]) ->

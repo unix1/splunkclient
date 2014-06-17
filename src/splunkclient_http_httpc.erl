@@ -4,6 +4,7 @@
 
 -behaviour(splunkclient_http_handler).
 
+%% Behavior callbacks
 -export([init/3]).
 -export([terminate/1]).
 -export([send_request/2]).
