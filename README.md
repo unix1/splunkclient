@@ -29,32 +29,40 @@ Installation
 Usage
 -----
 
-* to start in Erlang console
+To start in Erlang console
 
-      `_rel/bin/splunkclient_release console`
+```erlang
+_rel/bin/splunkclient_release console
+```
 
-* log in to the default connection host, or a specified named connection
+Log in to the default connection host, or a specified named connection
 
-      `splunkclient:login().`
+```erlang
+splunkclient:login().
 
-      `splunkclient:login(splunkclient_conn_another).`
+splunkclient:login(splunkclient_conn_another).
+```
 
-* run a simple "oneshot" search against the default or a specified named connection
+Run a simple "oneshot" search against the default or a specified named connection
 
-      `splunkclient:oneshot_search("index=main helloworld").`
+```erlang
+splunkclient:oneshot_search("index=main helloworld").
 
-      `splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").`
+splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").
+```
 
-* send an event
+Send an event
 
-      `splunkclient:send_simple(<<"2014-06-16 09:19:43 Tester,Record">>, [{"host","localhost"},{"source","testing1"},{"sourcetype","test-type"}]).`
+```erlang
+splunkclient:send_simple(<<"2014-06-16 09:19:43 Tester,Record">>, [{"host","localhost"},{"source","testing1"},{"sourcetype","test-type"}]).
+```
 
-* other useful functions
+Other useful functions
 
-      `splunkclient:get_indexes().`
+```erlang
+splunkclient:get_indexes().
+splunkclient:get_jobs().
+splunkclient:get_saved_searches().
+```
 
-      `splunkclient:get_jobs().`
-
-      `splunkclient:get_saved_searches().`
-
-* note that when calling functions without specifying a connection name, the `splunkclient_conn_default` will be used, so please don't change the name of this default entry in configuration
+Note that when calling functions without specifying a connection name, the `default` will be used, so please don't change the name of this default entry in configuration
