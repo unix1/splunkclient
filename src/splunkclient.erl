@@ -26,9 +26,10 @@
 
 start(_StartType, _StartArgs) ->
     {ok, ConnectionsConfig} = application:get_env(connections),
-    F = fun({Name, [{protocol, Pr}, {host, H}, {port, Po}, {user, U}, {pass, Pa}, {pool, Pl}, {http_backend, Hb}]}) ->
-        {Name, #splunkclient_conn{protocol = Pr, host = H, port = Po, user = U, pass = Pa, pool = Pl, http_backend = Hb}}
-        end,
+    F = fun({Name, [{protocol, Pr}, {host, H}, {port, Po}, {user, U},
+            {pass, Pa}, {pool, Pl}, {http_backend, Hb}]}) ->
+        {Name, splunkclient_conn:new(Pr, H, Po, U, Pa, Pl, Hb)}
+    end,
     Connections = lists:map(F, ConnectionsConfig),
     splunkclient_sup:start_link(Connections).
 

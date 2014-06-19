@@ -21,20 +21,20 @@
 -export([get_pool/1]).
 
 %% State record
--record (state, {connection = #splunkclient_conn{}, http_state}).
+-record (state, {connection, http_state}).
 
 %% ============================================================================
 %% Supervision functions
 %% ============================================================================
 
 %% start with locally registered name, supplied from supervisor
-start_link(Name, Connection) when is_atom(Name) ->
-    gen_server:start_link({local, Name}, ?MODULE, [Connection], []).
+start_link(Name, Conn) when is_atom(Name) ->
+    gen_server:start_link({local, Name}, ?MODULE, [Conn], []).
 
 %% init, set state
-init([Connection]) ->
-    {ok, HttpState} = splunkclient_http:init(Connection),
-    S = #state{connection = Connection, http_state = HttpState},
+init([Conn]) ->
+    {ok, HttpState} = splunkclient_http:init(Conn),
+    S = #state{connection = Conn, http_state = HttpState},
     {ok, S}.
 
 %% ============================================================================
@@ -64,7 +64,7 @@ handle_call({login}, _From, S) ->
     case liblogin(S#state.connection, S#state.http_state) of
         {ok, Token} ->
             gen_event:notify(splunkclient_service_eventman, {token, Token}),
-            NewState = S#state{connection = S#state.connection#splunkclient_conn{token = Token}},
+            NewState = S#state{connection = splunkclient_conn:set_token(S#state.connection, Token)},
             {reply, ok, NewState};
         {error, Reason} ->
             {stop, error, Reason, S};
@@ -72,7 +72,7 @@ handle_call({login}, _From, S) ->
             {stop, error, "Unknown error", S}
     end;
 handle_call({get_token}, _From, S) ->
-    {reply, S#state.connection#splunkclient_conn.token, S};
+    {reply, splunkclient_conn:get_token(S#state.connection), S};
 handle_call({get_connection}, _From, S) ->
     {reply, S#state.connection, S}.
 
@@ -90,8 +90,8 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 %% ============================================================================
 
 liblogin(C, HttpState) ->
-    Body = [{"username", C#splunkclient_conn.user},
-            {"password", C#splunkclient_conn.pass}],
+    Body = [{"username", splunkclient_conn:get_user(C)},
+            {"password", splunkclient_conn:get_pass(C)}],
     {ok, 200, _ResponseHeaders, ResponseBody} = splunkclient_http:post(C, HttpState, "/services/auth/login", [], [], Body),
     {XML, _} = xmerl_scan:string(binary_to_list(ResponseBody)),
     [#xmlText{value = SessionKey}] = xmerl_xpath:string("/response/sessionKey/text()", XML),

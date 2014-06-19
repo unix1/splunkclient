@@ -23,7 +23,7 @@
 -export([update_connection_token/2]).
 
 %% State record
--record (state, {connection = #splunkclient_conn{}, event_handler_id, http_state}).
+-record (state, {connection, event_handler_id, http_state}).
 
 %% ============================================================================
 %% Supervision functions
@@ -39,11 +39,12 @@ init([Config]) ->
     gen_event:add_handler(splunkclient_service_eventman, HandlerId, [self()]),
     ConnectionName = proplists:get_value(connection, Config),
     HttpBackend = proplists:get_value(http_backend, Config),
-    Connection1 = splunkclient_login:get_connection(ConnectionName),
+    Conn1 = splunkclient_login:get_connection(ConnectionName),
     % override default connection http backend from service pool configuration
-    Connection2 = Connection1#splunkclient_conn{http_backend = HttpBackend},
-    {ok, HttpState} = splunkclient_http:init(Connection2),
-    S = #state{connection = Connection2, event_handler_id = HandlerId, http_state = HttpState},
+    Conn2 = splunkclient_conn:set_backend(Conn1, HttpBackend),
+    {ok, HttpState} = splunkclient_http:init(Conn2),
+    S = #state{connection = Conn2, event_handler_id = HandlerId,
+        http_state = HttpState},
     {ok, S}.
 
 %% ============================================================================
@@ -93,9 +94,9 @@ update_connection_token(Pid, Token) ->
 %% ============================================================================
 
 handle_call({get_indexes}, _From, S) ->
-    Connection = S#state.connection,
+    Conn = S#state.connection,
     HttpState = S#state.http_state,
-    case libget_indexes(Connection, HttpState) of
+    case libget_indexes(Conn, HttpState) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -104,9 +105,9 @@ handle_call({get_indexes}, _From, S) ->
             {stop, error, "Unknown error", S}
     end;
 handle_call({get_jobs}, _From, S) ->
-    Connection = S#state.connection,
+    Conn = S#state.connection,
     HttpState = S#state.http_state,
-    case libget_jobs(Connection, HttpState) of
+    case libget_jobs(Conn, HttpState) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -115,9 +116,9 @@ handle_call({get_jobs}, _From, S) ->
             {stop, error, "Unknown error", S}
     end;
 handle_call({get_saved_searches}, _From, S) ->
-    Connection = S#state.connection,
+    Conn = S#state.connection,
     HttpState = S#state.http_state,
-    case libget_saved_searches(Connection, HttpState) of
+    case libget_saved_searches(Conn, HttpState) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -126,9 +127,9 @@ handle_call({get_saved_searches}, _From, S) ->
             {stop, error, "Unknwon error", S}
     end;
 handle_call({oneshot_search, SearchTerm}, _From, S) ->
-    Connection = S#state.connection,
+    Conn = S#state.connection,
     HttpState = S#state.http_state,
-    case liboneshot_search(Connection, HttpState, SearchTerm) of
+    case liboneshot_search(Conn, HttpState, SearchTerm) of
         {ok, Results} ->
             {reply, {ok, search_results, Results}, S};
         {error, Reason} ->
@@ -137,9 +138,9 @@ handle_call({oneshot_search, SearchTerm}, _From, S) ->
             {stop, error, "Unknown error", S}
     end;
 handle_call({send_simple, Event, Params}, _From, S) ->
-    Connection = S#state.connection,
+    Conn = S#state.connection,
     HttpState = S#state.http_state,
-    case libsend_simple(Connection, HttpState, Event, Params) of
+    case libsend_simple(Conn, HttpState, Event, Params) of
         ok ->
             {reply, ok, S};
         {error, Reason} ->
@@ -148,14 +149,16 @@ handle_call({send_simple, Event, Params}, _From, S) ->
             {stop, error, "Unknown error", S}
     end;
 handle_call({update_token, Token}, _From, S) ->
-    {reply, ok, S#state{connection = S#state.connection#splunkclient_conn{token = Token}}}.
+    Conn = splunkclient_conn:set_token(S#state.connection, Token),
+    {reply, ok, S#state{connection = Conn}}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 handle_info(_Msg, State) -> {noreply, State}.
 
 terminate(_Reason, S) ->
-    gen_event:delete_handler(splunkclient_service_eventman, S#state.event_handler_id, []),
+    gen_event:delete_handler(splunkclient_service_eventman,
+        S#state.event_handler_id, []),
     ok = splunkclient_http:terminate(S#state.connection, S#state.http_state).
 
 code_change(_OldVersion, State, _Extra) -> {ok, State}.
@@ -167,8 +170,9 @@ code_change(_OldVersion, State, _Extra) -> {ok, State}.
 libget_indexes(C, HttpState) ->
     Path = "/services/data/indexes/",
     Params = [],
-    Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
+    Headers = [{"Authorization", splunkclient_conn:get_token(C)}],
+    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path,
+        Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
@@ -176,8 +180,9 @@ libget_indexes(C, HttpState) ->
 libget_jobs(C, HttpState) ->
     Path = "/services/search/jobs/",
     Params = [],
-    Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
+    Headers = [{"Authorization", splunkclient_conn:get_token(C)}],
+    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path,
+        Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
@@ -185,8 +190,9 @@ libget_jobs(C, HttpState) ->
 libget_saved_searches(C, HttpState) ->
     Path = "/services/saved/searches/",
     Params = [],
-    Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path, Params, Headers),
+    Headers = [{"Authorization", splunkclient_conn:get_token(C)}],
+    {ok, 200, _, ResponseBody} = splunkclient_http:get(C, HttpState, Path,
+        Params, Headers),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
@@ -194,14 +200,16 @@ libget_saved_searches(C, HttpState) ->
 liboneshot_search(C, HttpState, SearchTerm) ->
     Path = "/services/search/jobs/",
     Body = [{"exec_mode", "oneshot"}, {"search", "search " ++ SearchTerm}],
-    Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, 200, _, ResponseBody} = splunkclient_http:post(C, HttpState, Path, [], Headers, Body),
+    Headers = [{"Authorization", splunkclient_conn:get_token(C)}],
+    {ok, 200, _, ResponseBody} = splunkclient_http:post(C, HttpState, Path,
+        [], Headers, Body),
     %{XML, _} = xmerl_scan:string(ResponseBody),
     %io:fwrite("got xml result: ~s~n", [XML]),
     {ok, ResponseBody}.
 
 libsend_simple(C, HttpState, Event, Params) ->
     Path = "/services/receivers/simple",
-    Headers = [{"Authorization", C#splunkclient_conn.token}],
-    {ok, 200, _, _} = splunkclient_http:post(C, HttpState, Path, Params, Headers, Event),
+    Headers = [{"Authorization", splunkclient_conn:get_token(C)}],
+    {ok, 200, _, _} = splunkclient_http:post(C, HttpState, Path, Params,
+        Headers, Event),
     ok.

@@ -13,10 +13,10 @@
 %% ============================================================================
 
 init(C) ->
-    Backend = C#splunkclient_conn.http_backend,
-    Protocol = C#splunkclient_conn.protocol,
-    Host = C#splunkclient_conn.host,
-    Port = C#splunkclient_conn.port,
+    Backend = splunkclient_conn:get_backend(C),
+    Protocol = splunkclient_conn:get_protocol(C),
+    Host = splunkclient_conn:get_host(C),
+    Port = splunkclient_conn:get_port(C),
     {ok, _State} = Backend:init(Protocol, Host, Port).
 
 get(C, State, Path) ->
@@ -32,7 +32,7 @@ get(C, State, BasePath, Params, Headers) ->
         _Else ->
             build_query_string(Params, BasePath ++ "?")
     end,
-    Backend = C#splunkclient_conn.http_backend,
+    Backend = splunkclient_conn:get_backend(C),
     Request = get_request(get, C, Path, "", Headers, ""),
     send_request(Backend, State, Request).
 
@@ -40,17 +40,17 @@ post(C, State, BasePath, Params, Headers, BodyParams) when is_list(BodyParams) -
     Type = "application/x-www-form-urlencoded",
     Path = get_path(BasePath, Params),
     Body = list_to_binary(build_query_string(BodyParams)),
-    Backend = C#splunkclient_conn.http_backend,
+    Backend = splunkclient_conn:get_backend(C),
     Request = get_request(post, C, Path, Body, Headers, Type),
     send_request(Backend, State, Request);
 post(C, State, BasePath, Params, Headers, Body) when is_binary(Body) ->
     Path = get_path(BasePath, Params),
-    Backend = C#splunkclient_conn.http_backend,
+    Backend = splunkclient_conn:get_backend(C),
     Request = get_request(post, C, Path, Body, Headers, ""),
     send_request(Backend, State, Request).
 
 terminate(C, State) ->
-    Backend = C#splunkclient_conn.http_backend,
+    Backend = splunkclient_conn:get_backend(C),
     ok = Backend:terminate(State).
 
 %% ============================================================================
@@ -59,9 +59,9 @@ terminate(C, State) ->
 
 get_request(Method, C, Path, Body, Headers, Type) ->
     #splunkclient_http{method = Method,
-                       protocol = C#splunkclient_conn.protocol,
-                       host = C#splunkclient_conn.host,
-                       port = C#splunkclient_conn.port,
+                       protocol = splunkclient_conn:get_protocol(C),
+                       host = splunkclient_conn:get_host(C),
+                       port = splunkclient_conn:get_port(C),
                        path = Path,
                        body = Body,
                        headers = Headers,
