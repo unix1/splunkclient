@@ -3,6 +3,7 @@ PROJECT = splunkclient
 # Options
 
 COMPILE_FIRST = splunkclient_http_handler
+CT_SUITES = splunk
 
 # Dependencies
 

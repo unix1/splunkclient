@@ -41,20 +41,30 @@ stop(_State) ->
 %% ============================================================================
 
 start() ->
-    application:start(crypto),
-    application:start(asn1),
-    application:start(public_key),
-    application:start(ssl),
-    application:start(inets),
-    application:start(splunkclient).
+	ok = application:ensure_started(ranch),
+    ok = application:ensure_started(crypto),
+	ok = application:ensure_started(cowlib),
+    ok = application:ensure_started(asn1),
+    ok = application:ensure_started(public_key),
+    ok = application:ensure_started(ssl),
+    ok = application:ensure_started(inets),
+    ok = application:ensure_started(poolboy),
+    ok = application:ensure_started(gun),
+    ok = application:ensure_started(splunkclient),
+    ok.
 
 stop() ->
-    application:stop(splunkclient),
-    application:stop(inets),
-    application:stop(ssl),
-    application:stop(public_key),
-    application:stop(asn1),
-    application:stop(crypto).
+    ok = application:stop(splunkclient),
+    ok = application:stop(gun),
+    ok = application:stop(poolboy),
+    ok = application:stop(inets),
+    ok = application:stop(ssl),
+    ok = application:stop(public_key),
+    ok = application:stop(asn1),
+    ok = application:stop(cowlib),
+    ok = application:stop(crypto),
+    ok = application:stop(ranch),
+    ok.
 
 get_indexes() ->
     get_indexes(?DEFAULT_CONN).
