@@ -1,6 +1,5 @@
 -module(splunkclient_login).
 
--include("splunkclient.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
 
 -behaviour(gen_server).

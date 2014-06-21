@@ -1,7 +1,5 @@
 -module(splunkclient).
 
--include("splunkclient.hrl").
-
 -behaviour(application).
 
 %% Behavior callbacks

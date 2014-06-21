@@ -1,7 +1,5 @@
 -module(splunkclient_sup).
 
--include("splunkclient.hrl").
-
 -behaviour(supervisor).
 
 %% User functions
