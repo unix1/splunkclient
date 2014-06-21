@@ -22,16 +22,22 @@ Optionally edit the included `splunkclient.config` file. You can:
 Installation
 ------------
 
-* compile
+* to use it in your application, include it as a dependency
+
+* to play with it in the console, you can compile
 
       `make`
+
+* you can run tests (requires locally installed Splunk with default configuration)
+
+      `make tests`
 
 Usage
 -----
 
 To start in Erlang console
 
-```erlang
+```
 _rel/bin/splunkclient_release console
 ```
 
