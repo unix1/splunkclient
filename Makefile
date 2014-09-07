@@ -2,14 +2,12 @@ PROJECT = splunkclient
 
 # Options
 
-COMPILE_FIRST = splunkclient_http_handler
 CT_SUITES = splunk
 
 # Dependencies
 
-DEPS = poolboy gun
-dep_poolboy = https://github.com/devinus/poolboy.git 1.2.0
-dep_gun = https://github.com/unix1/gun.git fix-body-no-contentlength
+DEPS = httpclient
+dep_httpclient = git https://github.com/unix1/httpclient.git
 
 # Standard targets
 

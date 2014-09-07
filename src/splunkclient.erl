@@ -24,12 +24,9 @@
 
 start(_StartType, _StartArgs) ->
     {ok, ConnectionsConfig} = application:get_env(connections),
-    F = fun({Name, [{protocol, Pr}, {host, H}, {port, Po}, {user, U},
-            {pass, Pa}, {pool, Pl}, {http_backend, Hb}]}) ->
-        {Name, splunkclient_conn:new(Pr, H, Po, U, Pa, Pl, Hb)}
-    end,
-    Connections = lists:map(F, ConnectionsConfig),
-    splunkclient_sup:start_link(Connections).
+    {ok, PoolConfig} = application:get_env(service_pools),
+    httpclient:start_pool(ConnectionsConfig, PoolConfig),
+    splunkclient_sup:start_link().
 
 stop(_State) ->
     ok.
@@ -39,20 +36,22 @@ stop(_State) ->
 %% ============================================================================
 
 start() ->
-	ok = application:ensure_started(ranch),
+    ok = application:ensure_started(ranch),
     ok = application:ensure_started(crypto),
-	ok = application:ensure_started(cowlib),
+    ok = application:ensure_started(cowlib),
     ok = application:ensure_started(asn1),
     ok = application:ensure_started(public_key),
     ok = application:ensure_started(ssl),
     ok = application:ensure_started(inets),
     ok = application:ensure_started(poolboy),
     ok = application:ensure_started(gun),
+    ok = application:ensure_started(httpclient),
     ok = application:ensure_started(splunkclient),
     ok.
 
 stop() ->
     ok = application:stop(splunkclient),
+    ok = application:stop(httpclient),
     ok = application:stop(gun),
     ok = application:stop(poolboy),
     ok = application:stop(inets),
@@ -86,7 +85,7 @@ login() ->
     login(?DEFAULT_CONN).
 
 login(Name) ->
-    splunkclient_login:login(Name).
+    httpclient_login:login(Name).
 
 oneshot_search(Term) ->
     oneshot_search(?DEFAULT_CONN, Term).

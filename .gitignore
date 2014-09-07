@@ -1,9 +1,12 @@
-.eunit
 .erlang.mk.packages.*
+.eunit
 *.o
 *.beam
+*.kdev4
 *.plt
 _rel
 deps
 ebin
+erl_crash.dump
+logs
 relx

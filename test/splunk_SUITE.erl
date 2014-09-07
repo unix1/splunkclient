@@ -45,10 +45,13 @@ init_per_suite(Config) ->
          [{protocol, "https"},
           {host, "localhost"},
           {port, 8089},
-          {user, "admin"},
-          {pass, "changeme"},
+          {user, <<"admin">>},
+          {pass, <<"changeme">>},
           {pool, splunkclient_service_default},
-          {http_backend, splunkclient_http_gun}]}]}, % backend for login service
+          {http_backend, httpclient_http_gun}, % backend for login service
+          {login_handler, splunkclient_login}, % authentication implementation
+          {service_handler, splunkclient_service} % service implementation
+          ]}]},
       {splunkclient, service_pools,
        [{splunkclient_service_default,
          [ % size args
@@ -56,7 +59,7 @@ init_per_suite(Config) ->
            {max_overflow, 0}], % max # of workers created if pool is empty
          [ % worker args
            {connection, default},
-           {http_backend, splunkclient_http_gun}]}] % backend for service workers
+           {http_backend, httpclient_http_gun}]}] % backend for service workers
        }]
     ],
     ok = splunkclient:start(),

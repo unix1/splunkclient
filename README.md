@@ -52,15 +52,15 @@ splunkclient:login(splunkclient_conn_another).
 Run a simple "oneshot" search against the default or a specified named connection
 
 ```erlang
-splunkclient:oneshot_search("index=main helloworld").
+splunkclient:oneshot_search(<<"index=main helloworld">>).
 
-splunkclient:oneshot_search(splunkclient_conn_another, "index=main helloworld").
+splunkclient:oneshot_search(splunkclient_conn_another, <<"index=main helloworld">>).
 ```
 
 Send an event
 
 ```erlang
-splunkclient:send_simple(<<"2014-06-16 09:19:43 Tester,Record">>, [{"host","localhost"},{"source","testing1"},{"sourcetype","test-type"}]).
+splunkclient:send_simple(<<"2014-06-16 09:19:43 action=foo, name=Tester, type=Record">>, [{<<"host">>,<<"localhost">>},{<<"source">>,<<"testing1">>},{<"sourcetype">>,<<"test-type">>}]).
 ```
 
 Other useful functions
