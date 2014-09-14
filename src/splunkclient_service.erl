@@ -28,7 +28,7 @@ get_jobs(ConnName) ->
 
 get_saved_searches(ConnName) ->
     {ok, 200, _, ResponseBody} =
-        httpclient_service:request(ConnName, {get_jobs, []}),
+        httpclient_service:request(ConnName, {get_saved_searches, []}),
     {ok, search_results, ResponseBody}.
 
 oneshot_search(ConnName, SearchTerm) ->
