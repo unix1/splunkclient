@@ -63,7 +63,7 @@ get_request(oneshot_search, [SearchTerm], Token) ->
     Path = <<"/services/search/jobs/">>,
     Body = [{<<"exec_mode">>, <<"oneshot">>},
             {<<"search">>, iolist_to_binary([<<"search ">>, SearchTerm])}],
-    {ok, httpclient_req:new(post, Headers, Path, Body)};
+    {ok, httpclient_req:new(post, Headers, Path, [], Body)};
 get_request(send_simple, [Event, Params], Token) ->
     Headers = [get_auth_header(Token),
                {<<"content-type">>, <<"application/x-www-form-urlencoded">>}],

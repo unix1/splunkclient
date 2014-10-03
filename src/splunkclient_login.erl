@@ -14,7 +14,7 @@ login(Conn, HttpState) ->
     Path = <<"/services/auth/login">>,
     Body = [{<<"username">>, httpclient_conn:get_user(Conn)},
             {<<"password">>, httpclient_conn:get_pass(Conn)}],
-    Req = httpclient_req:new(post, [], Path, Body),
+    Req = httpclient_req:new(post, [], Path, [], Body),
     {ok, 200, _ResponseHeaders, ResponseBody} =
         httpclient_http:request(Conn, HttpState, Req),
     {XML, _} = xmerl_scan:string(binary_to_list(ResponseBody)),
